@@ -53,10 +53,13 @@ This is a dummy project that calls the `Beep` API. This process, if executed alo
 
 This is a Detours helper DLL. When injected into a process, it installs hooks.
 
-### withdll
+### runwithdll
 
 This project leverages Detours' API `DetourCreateProcessWithDll` to run `dummy.exe` with the `dllsample.dll` (injected).
 
 ### lib_detours
 
 This is the Detours static library itself.
+
+### withdll
+The `withdll` sample from the Detours' sample directory.
