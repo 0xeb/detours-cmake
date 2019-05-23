@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 3.12)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 
+# Detours
 set(TARGET lib_detours)
 set(DETOURS_SOURCE Detours/src)
-
-project(${TARGET})
 
 add_library(${TARGET} STATIC
     ${DETOURS_SOURCE}/creatwth.cpp
@@ -28,3 +27,5 @@ set_property (
 target_compile_options(${TARGET} PRIVATE /W4 /WX /Zi /MT /Gy /Gm- /Zl /Od)
 target_include_directories(${TARGET} PUBLIC ${DETOURS_SOURCE})
 
+add_executable(withdll Detours/samples/withdll/withdll.cpp)
+target_link_libraries(withdll lib_detours)
