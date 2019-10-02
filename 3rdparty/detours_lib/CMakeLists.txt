@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-
 # Detours
 set(TARGET lib_detours)
 set(DETOURS_SOURCE Detours/src)

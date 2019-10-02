@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-
 # The hook library
 add_library(dllsample SHARED dllsample.cpp)
 target_link_libraries(dllsample PRIVATE lib_detours)
