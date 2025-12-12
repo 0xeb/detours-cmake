@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 #include <detours.h>
 
 static auto real_Beep = ::Beep;
@@ -16,14 +16,14 @@ int main()
 {
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourAttach(&(PVOID&)real_Beep, my_Beep);
+    DetourAttach(&(PVOID&)real_Beep, (PVOID)my_Beep);
     auto error = DetourTransactionCommit();
 
     ::Beep(200, 1000);
 
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)real_Beep, my_Beep);
+    DetourDetach(&(PVOID&)real_Beep, (PVOID)my_Beep);
     error = DetourTransactionCommit();
 
     return 0;

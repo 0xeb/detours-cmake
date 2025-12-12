@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <Windows.h>
+#include <windows.h>
 #include <detours.h>
 
 static auto real_Beep = ::Beep;
@@ -27,14 +27,14 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD dwReason, LPVOID reserved)
 
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
-        DetourAttach(&(PVOID&)real_Beep, my_Beep);
+        DetourAttach(&(PVOID&)real_Beep, (PVOID)my_Beep);
         error = DetourTransactionCommit();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
-        DetourDetach(&(PVOID&)real_Beep, my_Beep);
+        DetourDetach(&(PVOID&)real_Beep, (PVOID)my_Beep);
         error = DetourTransactionCommit();
     }
     return TRUE;

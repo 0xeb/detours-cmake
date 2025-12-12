@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, feature/*]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  # Windows native build with MSVC
+  windows-msvc:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, x86]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure CMake
+        run: cmake -B build -A ${{ matrix.arch == 'x64' && 'x64' || 'Win32' }}
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: List build artifacts
+        run: |
+          Get-ChildItem -Recurse build -Include *.exe,*.dll | Select-Object FullName, Length
+
+      - name: Test simple.exe (in-process hooking)
+        run: |
+          $output = & build\simple\Release\simple.exe 2>&1
+          Write-Host $output
+          if ($output -match "Beep\(\d+, \d+\)") {
+            Write-Host "PASS: Hook intercepted Beep call"
+          } else {
+            Write-Host "FAIL: Hook did not intercept Beep call"
+            exit 1
+          }
+
+      - name: Test DLL injection (runwithdll + dummy)
+        run: |
+          cd build\dllsample\Release
+          $output = & .\runwithdll.exe 2>&1
+          Write-Host $output
+          # runwithdll spawns dummy.exe with dllsample.dll injected
+          # The hook should intercept Beep calls from dummy.exe
+          Start-Sleep -Seconds 2
+          if ($output -match "ok!") {
+            Write-Host "PASS: DLL injection succeeded"
+          } else {
+            Write-Host "FAIL: DLL injection failed"
+            exit 1
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msvc-${{ matrix.arch }}
+          path: |
+            build/**/Release/*.exe
+            build/**/Release/*.dll
+
+  # Linux cross-compilation with MinGW
+  linux-mingw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install MinGW-w64
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+
+      - name: Configure CMake (cross-compile)
+        run: |
+          CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ cmake -B build .
+
+      - name: Build
+        run: cmake --build build
+
+      - name: List build artifacts
+        run: |
+          find build -name "*.exe" -o -name "*.dll" | xargs ls -la
+
+      - name: Verify PE format
+        run: |
+          file build/simple/simple.exe | grep -q "PE32+" && echo "PASS: simple.exe is PE32+"
+          file build/dllsample/dllsample.dll | grep -q "PE32+" && echo "PASS: dllsample.dll is PE32+"
+          file build/dllsample/dummy.exe | grep -q "PE32+" && echo "PASS: dummy.exe is PE32+"
+          file build/dllsample/runwithdll.exe | grep -q "PE32+" && echo "PASS: runwithdll.exe is PE32+"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-mingw-x64
+          path: |
+            build/**/*.exe
+            build/**/*.dll
+
+  # Test cross-compiled binaries on Windows
+  test-cross-compiled:
+    needs: linux-mingw
+    runs-on: windows-latest
+    steps:
+      - name: Download cross-compiled artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-mingw-x64
+          path: build
+
+      - name: List downloaded artifacts
+        run: Get-ChildItem -Recurse build -Include *.exe,*.dll
+
+      - name: Test simple.exe (cross-compiled)
+        run: |
+          $output = & build\simple\simple.exe 2>&1
+          Write-Host $output
+          if ($output -match "Beep\(\d+, \d+\)") {
+            Write-Host "PASS: Cross-compiled hook works"
+          } else {
+            Write-Host "FAIL: Cross-compiled hook failed"
+            exit 1
+          }
+
+      - name: Test DLL injection (cross-compiled)
+        run: |
+          cd build\dllsample
+          $output = & .\runwithdll.exe 2>&1
+          Write-Host $output
+          Start-Sleep -Seconds 2
+          if ($output -match "ok!") {
+            Write-Host "PASS: Cross-compiled DLL injection succeeded"
+          } else {
+            Write-Host "FAIL: Cross-compiled DLL injection failed"
+            exit 1
+          }
