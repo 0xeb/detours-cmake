@@ -30,7 +30,7 @@ jobs:
 
       - name: Test simple.exe (in-process hooking)
         run: |
-          $output = & build\simple\Release\simple.exe 2>&1
+          $output = & ".\build\simple\Release\simple.exe" 2>&1
           Write-Host $output
           if ($output -match "Beep\(\d+, \d+\)") {
             Write-Host "PASS: Hook intercepted Beep call"
@@ -41,8 +41,7 @@ jobs:
 
       - name: Test DLL injection (runwithdll + dummy)
         run: |
-          cd build\dllsample\Release
-          $output = & .\runwithdll.exe 2>&1
+          $output = & ".\build\dllsample\Release\runwithdll.exe" 2>&1
           Write-Host $output
           # runwithdll spawns dummy.exe with dllsample.dll injected
           # The hook should intercept Beep calls from dummy.exe
@@ -115,7 +114,7 @@ jobs:
 
       - name: Test simple.exe (cross-compiled)
         run: |
-          $output = & build\simple\simple.exe 2>&1
+          $output = & ".\build\simple\simple.exe" 2>&1
           Write-Host $output
           if ($output -match "Beep\(\d+, \d+\)") {
             Write-Host "PASS: Cross-compiled hook works"
@@ -126,8 +125,7 @@ jobs:
 
       - name: Test DLL injection (cross-compiled)
         run: |
-          cd build\dllsample
-          $output = & .\runwithdll.exe 2>&1
+          $output = & ".\build\dllsample\runwithdll.exe" 2>&1
           Write-Host $output
           Start-Sleep -Seconds 2
           if ($output -match "ok!") {
