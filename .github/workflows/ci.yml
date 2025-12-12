@@ -30,7 +30,7 @@ jobs:
 
       - name: Test simple.exe (in-process hooking)
         run: |
-          $output = & ".\build\simple\Release\simple.exe" 2>&1
+          $output = & ".\build\bin\Release\simple.exe" 2>&1
           Write-Host $output
           if ($output -match "Beep\(\d+, \d+\)") {
             Write-Host "PASS: Hook intercepted Beep call"
@@ -41,7 +41,7 @@ jobs:
 
       - name: Test DLL injection (runwithdll + dummy)
         run: |
-          $output = & ".\build\dllsample\Release\runwithdll.exe" 2>&1
+          $output = & ".\build\bin\Release\runwithdll.exe" 2>&1
           Write-Host $output
           # runwithdll spawns dummy.exe with dllsample.dll injected
           # The hook should intercept Beep calls from dummy.exe
@@ -58,8 +58,8 @@ jobs:
         with:
           name: windows-msvc-${{ matrix.arch }}
           path: |
-            build/**/Release/*.exe
-            build/**/Release/*.dll
+            build/bin/Release/*.exe
+            build/bin/Release/*.dll
 
   # Linux cross-compilation with MinGW
   linux-mingw:
